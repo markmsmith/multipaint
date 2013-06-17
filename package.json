@@ -1,0 +1,22 @@
+{
+  "name": "multipaint",
+  "author": "Mark Smith <MarkMackenzieSmith@gmail.com> (https://github.com/markmsmith/multipaint)",
+  "contributors": [
+    "Nate Kohari <nkohari@gmail.com> (https://github.com/nkohari/fingerpaint)",
+    "Paul Irish (http://www.paulirish.com/demo/multi)"
+  ],
+  "version": "0.8.0",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "coffee-script": "1.6.3",
+    "express": "3.2.6",
+    "socket.io": "0.9.16",
+    "connect-coffee-script": "0.1.4"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=0.8"
+  }
+}
