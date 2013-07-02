@@ -1,0 +1,38 @@
+extends layout
+
+block head
+  script(src='/javascripts/vendor/smartboard-1.0.0.js')
+  script(src='/socket.io/socket.io.js')
+  != js('client')
+block content
+  h1= title
+  p Welcome to #{title}
+  .container
+    .row
+      .span10(id=holderName)
+      #controls.span2
+        label Name:
+          input(type="text")
+
+  script.
+    var client = new MultiPaint.Client('#{holderName}', true);
+
+    SB.disableBanners = true;
+
+    // not required since we don't need SB.onPoint()
+    SB.wantsSDKEvents = false
+
+    // don't need touch event, since we can just use normal mouse events
+    SB.wantsTouches = false;
+
+    SB.onToolChange = function(evt){
+      if (typeof(evt.tool) != "undefined"){
+          switch(evt.tool) {
+            case "polyline":
+            case "pen":
+              client.setUserColor( evt.color.join(',') );
+            break;
+          }
+      }
+    };
+

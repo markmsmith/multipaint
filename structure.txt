@@ -1,0 +1,6 @@
+PaintSession
+	layers
+		id
+		owner  - if null, means shared, anyone can edit
+		writeProtect - prevent any write events
+		canvas

@@ -1,0 +1,18 @@
+<!doctype html>
+<html>
+	<head>
+		<title>Fingerpaint</title>
+	</head>
+	<body>
+		<canvas id="draw"></canvas>
+		<div id="status"></div>
+		<div id="help">click to draw, press <strong>n</strong> to change your name</div>
+		<script src="/lib/jquery-1.10.1.min.js"></script>
+		<script src="/lib/lodash.compat.min.js"></script>
+		<script src="/socket.io/socket.io.js"></script>
+		<script src="client.js"></script>
+		<script>
+		$(function() { new Fingerpaint.Client(); })
+		</script>
+	</body>
+</html>
