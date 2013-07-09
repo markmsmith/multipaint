@@ -4,6 +4,7 @@ block head
   script(src='/javascripts/vendor/smartboard-1.0.0.js')
   script(src='/socket.io/socket.io.js')
   != js('client')
+  != js('Layer')
 block content
   h1= title
   p Welcome to #{title}
@@ -15,6 +16,7 @@ block content
           input(type="text")
 
   script.
+    var paintSession = '#{paintSession}';
     var client = new MultiPaint.Client('#{holderName}', true);
 
     SB.disableBanners = true;
@@ -23,6 +25,7 @@ block content
     SB.wantsSDKEvents = false
 
     // don't need touch event, since we can just use normal mouse events
+    //TODO check if needed multi-touch
     SB.wantsTouches = false;
 
     SB.onToolChange = function(evt){

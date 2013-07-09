@@ -1,16 +1,41 @@
 uid = require('uid2')
 Canvas = require('canvas')
-
+ServerLayer = require('./ServerLayer')
 
 class PaintSession
-	constructor: () ->
-		@id = uid(24);
+	constructor: (@owner) ->
+		@id = uid(24)
 		console.log("New paint session, id #{@id}")
 
+		@editors = {}
+		@editorCount = 0
+
 		@layers = {}
+		@layerCount = 0
+
+		@addUser(@owner)
+
+	addLayer: (dimensions, owner=null, writeProtect=false) ->
+		layerID = @layerCount++
+		return @layers[layerID] = new ServerLayer(layerID, dimensions, owner, writeProtect)
 
 	addUser: (user) ->
-		@layers[user.id] = canvas = new Canvas(200,200)
+
+		#TODO figure out (re)sizing of server-side canvas from client size
+		dimensions =
+			width: 200
+			height: 200
+
+		#TODO user-reconnect logic
+
+		# This is the user's personal layer that lasts as long as they're in the session
+		userLayer = @addLayer(dimensions, user)
+		@editors[user.id] = {
+			user
+			userLayer
+		}
+		@editorCount++
+
 
 		# ctx = canvas.getContext('2d')
 		# ctx.font = '30px Impact'

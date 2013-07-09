@@ -18,7 +18,7 @@ class SocketSession
 						return callback(null, false)
 
 					console.log("Found session #{data.sessionID}: ", session)
-					data.session = session;
+					data.session = session
 
 					return callback(null, true)
 				)

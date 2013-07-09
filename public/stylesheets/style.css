@@ -23,7 +23,7 @@ canvas {
 	user-select: none; -webkit-user-select: none; -moz-user-select: none;
 }
 
-canvas#sketchArea {
+canvas.sketchArea {
 	border: solid black 1px;
 	border-radius: 5px;
 }

@@ -15,7 +15,7 @@ var app = express();
 var sessionStore = new MemoryStore();
 var COOKIE_SECRET = '9710e25b-12e7-49df-9818-09f1c61cad52';
 var cookieParser = express.cookieParser(COOKIE_SECRET);
-var SESSION_COOKIE_KEY = 'express.sid';
+var SESSION_COOKIE_KEY = 'multipaint.sid';
 
 var config = {
 	port: process.env.PORT || 3000,

@@ -8,6 +8,7 @@ class SocketHandler
 		@userCount = 0
 
 		io.sockets.on('connection', (socket) =>
+			#TODO replace with OAuth userID
 			userID = socket.handshake.sessionID
 			console.log("User with sessionID #{userID} connected")
 
@@ -22,8 +23,7 @@ class SocketHandler
 			socket.json.emit('users', { @users, userID })
 			socket.broadcast.emit('userConnected', user)
 
-			ps = new PaintSession()
-			ps.addUser(user)
+			ps = new PaintSession(user)
 
 			socket.on('move', (data) =>
 				console.log(data)

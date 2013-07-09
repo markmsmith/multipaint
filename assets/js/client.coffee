@@ -4,22 +4,18 @@ class MultiPaint.Client
 
 	# holderID is the id of the element to hold the canvas
 	# standalone is whether we connect to a server to broadcast events etc
-	# https is whether the server is https or not
-	constructor: (holderID, standalone, https) ->
-		@holderID = holderID
+	constructor: (@holderID, standalone) ->
 		@holder = $("##{holderID}")
 		@standalone = standalone
-		@https = https
 
 		@users = {}
 		@userCount = 0
 
-		# unless @standalone
-		protocol = document.location.protocol
-		host = document.location.hostname
+		@layers = {}
+
 		@socket = io.connect()
 		@socket.on('error', (e) ->
-			console.log('An error occurred connecting socket.io: ', e ? 'A unknown error occurred')
+			console.log('An error occurred connecting to socket: ', e ? 'A unknown error occurred')
 		)
 
 		@socket.on('disconnect', (e) ->
@@ -29,17 +25,20 @@ class MultiPaint.Client
 
 		@viewport = $(window)
 		holderDimensions = @_getHolderDimensions()
-		@canvas = $('<canvas id="sketchArea"/>').attr( holderDimensions ).appendTo(@holder)
 		@holder.attr(holderDimensions)
 		@holder.css('height', holderDimensions.height)
-		@ctx = @canvas.get(0).getContext('2d')
-		@canvasEl = @ctx.canvas
+
+		layerID = '1234'
+		owner = 'ABC'
+		@selectedLayer = new MultiPaint.Layer(@holder, holderDimensions, layerID, owner)
+		@layers[layerID] = @selectedLayer
 
 		@viewport.resize =>
 			@resizeCanvas()
 
 		# only listen to the canvas for mouse move, so don't expand holder with avatar
-		@canvas.mousemove _.throttle((event) =>
+		#TODO enforce a 'user canvas' for mouse listening
+		@selectedLayer.canvas.mousemove _.throttle((event) =>
 			position =
 				x: event.pageX
 				y: event.pageY
@@ -66,11 +65,11 @@ class MultiPaint.Client
 
 				@moveUser(@user, canvasPos, false)
 			else
-				@socket.json.emit 'move', canvasPos, false
+				@socket.json.emit('move', canvasPos, false)
 
 		@holder.on 'touchstart': (event) =>
 			# since touches can jump without moving to new location, need to update position first
-			touch = event.originalEvent.touches[0];
+			touch = event.originalEvent.touches[0]
 			position =
 				x: touch.pageX
 				y: touch.pageY
@@ -82,8 +81,8 @@ class MultiPaint.Client
 			@drawing = false
 
 		@holder.on 'touchmove': _.throttle((event) =>
-			event.preventDefault();
-			touch = event.originalEvent.touches[0];
+			event.preventDefault()
+			touch = event.originalEvent.touches[0]
 			position =
 				x: touch.pageX
 				y: touch.pageY
@@ -91,10 +90,10 @@ class MultiPaint.Client
 		, 25)
 
 
-		@socket.on('users', (users)->
-			console.log("users: ", users)
-			@users = users
-			@user = users[-1]
+		@socket.on('users', (userInfo) ->
+			console.log("users: ", userInfo)
+			@users = userInfo.users
+			@user = userInfo.users[userInfo.userID]
 		)
 
 		dummyUser =
@@ -105,7 +104,6 @@ class MultiPaint.Client
 
 	setUserColor: (newColor) ->
 		@user.color = newColor
-		# @user.avatar.find('.nick').css('color', "rgba(#{newColor}, 1.0)")
 		@redrawAvatar()
 
 	handleMove: (position, drawing=@drawing) ->
@@ -128,23 +126,20 @@ class MultiPaint.Client
 		height: @viewport.height() - bodyMargin - bodyPadding - canvasBorder - holderTop
 
 	resizeCanvas: ->
-		# changing the canvas dimensions clears it in some browser, so redraw the data
-		currentData = @canvasEl.toDataURL()
-		currentImage = new Image()
-		currentImage.src = currentData
-
+		console.log('resize')
 		holderDimensions = @_getHolderDimensions()
-		@canvas.attr(holderDimensions)
-		@holder.attr(holderDimensions)
 
-		@ctx.clearRect(0, 0, @canvasEl.width, @canvasEl.height)
-		@ctx.drawImage(currentImage, 0, 0)
+		_.each(@layers, (layer) ->
+			layer.resize(holderDimensions)
+		)
+
+		@holder.attr(holderDimensions)
 
 	addUser: (user) ->
 		newUser =
-			id:     user.id
+			id: user.id
 			nick: user.nick
-			color:  user.color
+			color: user.color
 			avatar: @createAvatar(user)
 		@users[user.id] = newUser
 		@userCount++
@@ -156,7 +151,7 @@ class MultiPaint.Client
 
 
 	windowToCanvasPos: (windowPos) ->
-		canvasOffset = @canvas.offset()
+		canvasOffset = @selectedLayer.canvas.offset()
 		return {
 			x: windowPos.x - canvasOffset.left
 			y: windowPos.y - canvasOffset.top
@@ -171,7 +166,7 @@ class MultiPaint.Client
 
 		avatar.appendTo(@holder)
 
-		# avatarSVG = $(document.createElementNS('http://www.w3.org/2000/svg', 'circle')).appendTo(avatar);
+		# avatarSVG = $(document.createElementNS('http://www.w3.org/2000/svg', 'circle')).appendTo(avatar)
 		# avatarSVG.attr(
 		# 	cx: 8
 		# 	cy: 8
@@ -196,7 +191,7 @@ class MultiPaint.Client
 
 		return $(avatar)
 
-	redrawAvatar: () ->
+	redrawAvatar: ->
 		oldAvatar = @user.avatar
 		oldPos = oldAvatar.position()
 		@holder.find("#user-#{@user.id}").remove()
@@ -212,13 +207,13 @@ class MultiPaint.Client
 				x: offset.left + 8
 				y: offset.top + 8
 
-			@ctx.lineWidth = 3
-			@ctx.strokeStyle = "rgba(#{user.color}, 0.8)"
-			@ctx.beginPath()
-			@ctx.moveTo(old.x, old.y)
-			@ctx.lineTo(position.x, position.y)
-			@ctx.closePath()
-			@ctx.stroke()
+			@selectedLayer.ctx.lineWidth = 3
+			@selectedLayer.ctx.strokeStyle = "rgba(#{user.color}, 0.8)"
+			@selectedLayer.ctx.beginPath()
+			@selectedLayer.ctx.moveTo(old.x, old.y)
+			@selectedLayer.ctx.lineTo(position.x, position.y)
+			@selectedLayer.ctx.closePath()
+			@selectedLayer.ctx.stroke()
 
 		user.avatar.css(
 			left: "#{position.x - 8}px"

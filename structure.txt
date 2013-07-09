@@ -1,5 +1,9 @@
 PaintSession
-	layers
+	id
+	owner
+	editors
+	viewers
+	layers <ServerLayer>
 		id
 		owner  - if null, means shared, anyone can edit
 		writeProtect - prevent any write events
