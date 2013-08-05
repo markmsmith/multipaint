@@ -1,9 +1,9 @@
 ToDo
 ----
-- [ ] Create a new paint session with it's own socket.io room
-- [ ] Broadcast move and draw events to room
+- [x] Create a new paint session with it's own socket.io room
+- [x] Broadcast move and draw events to room
 - [ ] Save sever layer image data on draw events
-- [ ] Make move events volatile (lossy)
+- [x] Make move events volatile (lossy)
 - [ ] Join a second client to an existing paint session
 - [ ] Add color picker palette
 - [ ] Have server honor remote color selections
@@ -19,12 +19,12 @@ ToDo
 	- [ ] maybe show rectangle of visible/editable area in this mode, 2-finger pan?
 	- [ ] 3-finger pan for larger screens that would still want 2 finger multi-touch?
 - [ ] Support windows 8 touch w/ pressure sensitivity
-- [ ] Support Chromecast
-- [ ] Support gamepad
+- [ ] Support Chromecast (https://developers.google.com/cast/)
+- [ ] Support gamepad (http://www.gamepadjs.com/)
 - [ ] Investigate OAuth login for users
 - [ ] Have browser windowClose fire disconnect
 - [ ] Support web cam blob detection (figure out drawing start/stop)
-- [ ] Investigate WebRTC P2P comms
+- [ ] Investigate WebRTC P2P comms (http://peerjs.com/ or https://github.com/share/ShareJS)
 - [ ] Add P2P audio/video streaming
 - [ ] Integrate $1 gesture recognizer
 - [ ] Better support window resizing
