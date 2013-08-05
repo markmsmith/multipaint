@@ -1,0 +1,32 @@
+ToDo
+----
+- [ ] Create a new paint session with it's own socket.io room
+- [ ] Broadcast move and draw events to room
+- [ ] Save sever layer image data on draw events
+- [ ] Make move events volatile (lossy)
+- [ ] Join a second client to an existing paint session
+- [ ] Add color picker palette
+- [ ] Have server honor remote color selections
+- [ ] Add thickness selector
+- [ ] Allow adding secondary layers
+- [ ] Support multi-touch (iPad)
+- [ ] Support SmartBoard multi-touch
+- [ ] Support Leap multi-touch
+- [ ] Supprt image upload layer
+- [ ] Support saving
+- [ ] Support attaching to Rally story
+- [ ] Support phone trackpad with QR registration (like reveal.js)
+	- [ ] maybe show rectangle of visible/editable area in this mode, 2-finger pan?
+	- [ ] 3-finger pan for larger screens that would still want 2 finger multi-touch?
+- [ ] Support windows 8 touch w/ pressure sensitivity
+- [ ] Support Chromecast
+- [ ] Support gamepad
+- [ ] Investigate OAuth login for users
+- [ ] Have browser windowClose fire disconnect
+- [ ] Support web cam blob detection (figure out drawing start/stop)
+- [ ] Investigate WebRTC P2P comms
+- [ ] Add P2P audio/video streaming
+- [ ] Integrate $1 gesture recognizer
+- [ ] Better support window resizing
+- [ ] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
+- [ ] Support offline work and then resync with oldest/most recent edit times on server and client

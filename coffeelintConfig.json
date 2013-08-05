@@ -63,7 +63,7 @@
         "level": "ignore"
     },
     "no_stand_alone_at": {
-        "level": "ignore"
+        "level": "warn"
     },
     "arrow_spacing": {
         "level": "warn"

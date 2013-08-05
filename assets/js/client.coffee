@@ -3,42 +3,102 @@ window.MultiPaint ?= {}
 class MultiPaint.Client
 
 	# holderID is the id of the element to hold the canvas
-	# standalone is whether we connect to a server to broadcast events etc
-	constructor: (@holderID, standalone) ->
-		@holder = $("##{holderID}")
-		@standalone = standalone
-
-		@users = {}
-		@userCount = 0
-
-		@layers = {}
-
-		@socket = io.connect()
-		@socket.on('error', (e) ->
-			console.log('An error occurred connecting to socket: ', e ? 'A unknown error occurred')
-		)
-
-		@socket.on('disconnect', (e) ->
-			console.log('Got a disconnect')
-		)
-
-
+	# paintSession is the GUUID of an existing session to join, or empty
+	constructor: (@holderID, @paintSessionID) ->
+		# whether we're talking to a server before changing the UI
+		@standalone = false
 		@viewport = $(window)
+		@holder = $("##{holderID}")
+
 		holderDimensions = @_getHolderDimensions()
 		@holder.attr(holderDimensions)
 		@holder.css('height', holderDimensions.height)
 
-		layerID = '1234'
-		owner = 'ABC'
-		@selectedLayer = new MultiPaint.Layer(@holder, holderDimensions, layerID, owner)
-		@layers[layerID] = @selectedLayer
+		@socket = io.connect()
+
+		@socket.on('connecting', ->
+			console.log('Connecting...')
+		)
+
+		@socket.on('connect_failed', ->
+			console.log("Failed to connect")
+		)
+
+		@socket.on('disconnect', ->
+			console.log('Disconnected')
+		)
+
+		@socket.on('reconnecting', (nextRetry) ->
+			console.log("Reconnecting in #{nextRetry} seconds...")
+		)
+
+		@socket.on('reconnect', ->
+			console.log("Reconnected")
+		)
+
+		@socket.on('error', (e) ->
+			console.log('An error occurred connecting to socket: ', e ? 'A unknown error occurred')
+		)
+
+		@socket.on('connect', =>
+			console.log('Connected')
+			connectMessage =
+				clientDimensions: holderDimensions
+
+			# check without ? to handle empty string as falsey as well
+			if @paintSessionID
+				console.log("Joining existing paint session with ID #{@paintSessionID}.")
+				connectMessage.paintSession = @paintSessionID
+				@socket.json.emit('joinPaintSession', connectMessage, @onJoinPaintSession)
+			else
+				console.log("Creating a new paint session to join.")
+				@socket.json.emit('createPaintSession', connectMessage, @onJoinPaintSession)
+		)
+
+	onJoinPaintSession: ({
+		@paintSessionID
+		layers
+		primaryLayerID
+		editors
+		clientID
+	}) =>
+		holderDimensions = @_getHolderDimensions()
+		@layers = {}
+		_.each(layers, (layer) =>
+			layerID = layer.id
+
+			#TODO figure out how to deal with dimensions on client of other people's different sized layers
+			# just show as own size for now
+			layer.dimensions = holderDimensions
+
+			localLayer = @layers[layerID] = new MultiPaint.Layer(@holder, layer)
+
+			# check if it's the user's primary layer
+			if layerID == primaryLayerID
+				# selectedLayer is the layer they're currently drawing to
+				# the user's primary layer is one they can't delete
+				@selectedLayer = @primaryLayer = localLayer
+		)
+
+		@users = {}
+		@userCount = 0
+		_.each(editors, (serverEditor) =>
+			#TODO concept of editorID, distinct from userID
+			serverUser = serverEditor.user
+			localUser = @addLocalUser(serverUser)
+
+			if serverUser.id == clientID
+				@clientUser = localUser
+		)
 
 		@viewport.resize =>
 			@resizeCanvas()
 
+		@socket.on('remoteMove', @handleRemoteMove)
+
 		# only listen to the canvas for mouse move, so don't expand holder with avatar
-		#TODO enforce a 'user canvas' for mouse listening
-		@selectedLayer.canvas.mousemove _.throttle((event) =>
+		#TODO enforce a 'primary layer canvas' for mouse listening
+		@primaryLayer.canvas.mousemove _.throttle((event) =>
 			position =
 				x: event.pageX
 				y: event.pageY
@@ -55,20 +115,17 @@ class MultiPaint.Client
 		$(document).mouseup (event) =>
 			@drawing = false
 
+		# if exit and renter, update position so don't draw line from exit point
 		@holder.mouseenter (event) =>
-			# if exit and renter, update position so don't draw line from exit point
 			position =
 				x: event.pageX
 				y: event.pageY
-			canvasPos = @windowToCanvasPos(position)
-			if @standalone
+			@handleMove(position, false)
 
-				@moveUser(@user, canvasPos, false)
-			else
-				@socket.json.emit('move', canvasPos, false)
 
 		@holder.on 'touchstart': (event) =>
-			# since touches can jump without moving to new location, need to update position first
+			# since touches can jump without first moving to the new location,
+			# need to update position first or we'll draw from the last touch location
 			touch = event.originalEvent.touches[0]
 			position =
 				x: touch.pageX
@@ -89,29 +146,59 @@ class MultiPaint.Client
 			@handleMove(position)
 		, 25)
 
+		# we're ready to draw!
+		@ready = true
 
-		@socket.on('users', (userInfo) ->
-			console.log("users: ", userInfo)
-			@users = userInfo.users
-			@user = userInfo.users[userInfo.userID]
-		)
+		# @socket.on('users', (userInfo) ->
+		# 	console.log("users: ", userInfo)
+		# 	@users = userInfo.users
+		# 	@clientUser = userInfo.users[userInfo.userID]
+		# )
 
-		dummyUser =
-			id: 1
-			nick: 'user1'
-			color: '255,0,0'
-		@addUser(dummyUser)
+		# dummyUser =
+		# 	id: 1
+		# 	nick: 'user1'
+		# 	color: '255,0,0'
+		# @addLocalUser(dummyUser)
+
+	addLocalUser: (user) ->
+		localUser =
+			id: user.id
+			nick: user.nick
+			color: user.color
+			avatar: @createAvatar(user)
+		@users[user.id] = localUser
+		@userCount++
+
+		return localUser
 
 	setUserColor: (newColor) ->
-		@user.color = newColor
-		@redrawAvatar()
+		if @standalone
+			@clientUser.color = newColor
+			@redrawAvatar(@clientUser)
+		else
+			if @ready
+				#TODO update server color properly
+				@socket.emit('setUserColor', newColor)
+			else
+				#TODO pick up after init
+				@bufferedColor = newColor
 
 	handleMove: (position, drawing=@drawing) ->
 		canvasPos = @windowToCanvasPos(position)
 		if @standalone
-			@moveUser(@user, canvasPos, drawing)
+			@moveLocalUser(@clientUser, canvasPos, drawing)
 		else
-			@socket.json.emit 'move', canvasPos, drawing
+			#TODO Add touch id / multi-touch support
+			moveData = {
+				canvasPos
+				drawing
+			}
+			@socket.json.emit('move', moveData)
+
+	handleRemoteMove: ({userID, canvasPos, drawing}) =>
+		#TODO move the right user
+		@moveLocalUser(@clientUser, canvasPos, drawing)
 
 	_getHolderDimensions: ->
 		body = $('body')
@@ -134,20 +221,6 @@ class MultiPaint.Client
 		)
 
 		@holder.attr(holderDimensions)
-
-	addUser: (user) ->
-		newUser =
-			id: user.id
-			nick: user.nick
-			color: user.color
-			avatar: @createAvatar(user)
-		@users[user.id] = newUser
-		@userCount++
-
-		if @standalone or user.id == @socket.id
-			@user = newUser
-
-		# @updateStatus()
 
 
 	windowToCanvasPos: (windowPos) ->
@@ -191,31 +264,31 @@ class MultiPaint.Client
 
 		return $(avatar)
 
-	redrawAvatar: ->
-		oldAvatar = @user.avatar
+	redrawAvatar: (localUser) ->
+		oldAvatar = localUser.avatar
 		oldPos = oldAvatar.position()
-		@holder.find("#user-#{@user.id}").remove()
-		newAvater = @createAvatar(@user, oldPos)
-		@user.avatar = newAvater
+		@holder.find("#user-#{localUser.id}").remove()
+		newAvater = @createAvatar(localUser, oldPos)
+		localUser.avatar = newAvater
 
-	moveUser: (user, position, drawing) ->
-
+	moveLocalUser: (localUser, position, drawing) ->
+		debugger
 		if drawing
-			offset = user.avatar.position()
+			offset = localUser.avatar.position()
 
 			old =
 				x: offset.left + 8
 				y: offset.top + 8
 
 			@selectedLayer.ctx.lineWidth = 3
-			@selectedLayer.ctx.strokeStyle = "rgba(#{user.color}, 0.8)"
+			@selectedLayer.ctx.strokeStyle = "rgba(#{localUser.color}, 0.8)"
 			@selectedLayer.ctx.beginPath()
 			@selectedLayer.ctx.moveTo(old.x, old.y)
 			@selectedLayer.ctx.lineTo(position.x, position.y)
 			@selectedLayer.ctx.closePath()
 			@selectedLayer.ctx.stroke()
 
-		user.avatar.css(
+		localUser.avatar.css(
 			left: "#{position.x - 8}px"
 			top:  "#{position.y - 8}px"
 		)

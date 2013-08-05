@@ -3,7 +3,7 @@ Canvas = require('canvas')
 ServerLayer = require('./ServerLayer')
 
 class PaintSession
-	constructor: (@owner) ->
+	constructor: (@owner, ownerDimensions) ->
 		@id = uid(24)
 		console.log("New paint session, id #{@id}")
 
@@ -13,29 +13,36 @@ class PaintSession
 		@layers = {}
 		@layerCount = 0
 
-		@addUser(@owner)
+		@addUser(@owner, ownerDimensions)
 
-	addLayer: (dimensions, owner=null, writeProtect=false) ->
+	addLayer: (dimensions, ownerID=null, primary=false, writeProtect=false) ->
 		layerID = @layerCount++
-		return @layers[layerID] = new ServerLayer(layerID, dimensions, owner, writeProtect)
+		return @layers[layerID] = new ServerLayer(layerID, dimensions, ownerID, primary, writeProtect)
 
-	addUser: (user) ->
+	# returns the primary layer for this user
+	addUser: (user, dimensions) ->
 
 		#TODO figure out (re)sizing of server-side canvas from client size
-		dimensions =
-			width: 200
-			height: 200
 
 		#TODO user-reconnect logic
 
-		# This is the user's personal layer that lasts as long as they're in the session
-		userLayer = @addLayer(dimensions, user)
+		# This is the user's primary layer that lasts as long as they're in the session
+		primaryLayer = @addLayer(dimensions, user.id, true)
+		#TODO add concept of editorID, where one user can have multiple editors if using multiple browser/devices
 		@editors[user.id] = {
 			user
-			userLayer
+			primaryLayer
+			color: '#000' #TODO
 		}
 		@editorCount++
 
+		return primaryLayer.id
+
+	getClientLayers: ->
+		return (layer for own id, layer of @layers)
+
+	getClientEditors: ->
+		return (editor for own id, editor of @editors)
 
 		# ctx = canvas.getContext('2d')
 		# ctx.font = '30px Impact'
