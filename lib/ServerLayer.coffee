@@ -23,6 +23,7 @@ class ServerLayer
 		@old = canvasPos
 
 	draw: (canvasPos, color) ->
+
 		@ctx.lineWidth = 3
 		@ctx.strokeStyle = "rgba(#{color}, 0.8)"
 		@ctx.beginPath()

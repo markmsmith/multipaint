@@ -13,11 +13,13 @@ class MultiPaint.Layer
 		@canvasEl = @ctx.canvas
 
 		if @imageData
-			image = @_imageFromDataUrl(@imageData)
-			@ctx.drawImage(image, 0, 0)
+			@_imageFromDataUrl(@imageData, (image) =>
+				@ctx.drawImage(image, 0, 0, image.width, image.height)
+			)
 
-	_imageFromDataUrl: (dataUrl) ->
+	_imageFromDataUrl: (dataUrl, callback) ->
 		image = new Image()
+		image.onload = -> callback(this)
 		image.src = dataUrl
 		return image
 

@@ -99,6 +99,7 @@ class MultiPaint.Client
 
 		@socket.on('remoteMove', @handleRemoteMove)
 		@socket.on('userJoined', @handleUserJoined)
+		@socket.on('userLeft', @handleUserLeft)
 
 		# only listen to the interaction layer for mouse move, so don't expand holder with avatar
 		@interactionLayer.mousemove _.throttle((event) =>
@@ -182,6 +183,12 @@ class MultiPaint.Client
 
 		return localUser
 
+	removeLocalUser: (userID) ->
+		localUser = @users[userID]
+		localUser?.avatar.remove()
+		delete @users[user.id]
+		@userCount--
+
 	setUserColor: (newColor) ->
 		if @standalone
 			@clientUser.color = newColor
@@ -223,6 +230,10 @@ class MultiPaint.Client
 
 		@addLocalLayer(layer)
 		@addLocalUser(user)
+
+	handleUserLeft: (userID) =>
+		@removeLocalUser(userID)
+		#TODO other cleanup
 
 	_getHolderDimensions: ->
 		body = $('body')

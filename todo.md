@@ -2,7 +2,7 @@ ToDo
 ----
 - [x] Create a new paint session with it's own socket.io room
 - [x] Broadcast move and draw events to room
-- [ ] Save server layer image data on draw events
+- [x] Save server layer image data on draw events
 - [x] Make move events volatile (lossy)
 - [x] Join a second client to an existing paint session
 - [ ] Use pushstate or fragments(#) to make url sharable
@@ -15,6 +15,7 @@ ToDo
 - [ ] Support Leap multi-touch
 - [ ] Supprt image upload layer
 - [ ] Support saving
+- [ ] Handle clean-up of disconnected users' layers?  Allow reattach?
 - [ ] Support attaching to Rally story
 - [ ] Support phone trackpad with QR registration (like reveal.js)
 	- [ ] maybe show rectangle of visible/editable area in this mode, 2-finger pan?
@@ -23,6 +24,9 @@ ToDo
 - [ ] Support Chromecast (https://developers.google.com/cast/)
 - [ ] Support gamepad (http://www.gamepadjs.com/)
 - [ ] Investigate OAuth login for users
+- [ ] Refactor to editors vs users concept (a single user can be multiple editors with different colors)
+- [ ] Support avatar customization?  Gravatar?
+- [ ] Display user presence in top corner like google docs
 - [ ] Have browser windowClose fire disconnect (maybe not needed?)
 - [ ] Support web cam blob detection (figure out drawing start/stop)
 - [ ] Investigate WebRTC P2P comms (http://peerjs.com/ or https://github.com/share/ShareJS)

@@ -35,7 +35,11 @@ class SocketHandler
 						delete @users[userID]
 						@userCount--
 						console.log("User with userID #{userID} disconnected, userCount now #{@userCount}")
-						console.log('Last socket closed for user with session #{userID}, removing from users map.')
+						console.log("Last socket closed for user with session #{userID}, removing from users map.")
+
+						#TODO only emit to rooms for paint sessions they're in + clean up layers
+						@io.sockets.emit('userLeft', userID)
+
 			)
 
 			socket.on('createPaintSession', ({clientDimensions}, callback) =>
@@ -48,7 +52,6 @@ class SocketHandler
 
 				# a new session will only have user's primary layer
 				primaryLayerID = clientLayers[0].id
-				console.log("created paint session with primaryLayerID #{primaryLayerID}")
 
 				@setupPaintSessionListeners(socket, ps, user)
 
@@ -60,8 +63,6 @@ class SocketHandler
 					clientID: userID
 				}
 
-				console.log('createPaintSession ack message: ')
-				console.log( JSON.stringify(ackMessage) )
 				callback(ackMessage)
 				socket.join(ps.id)
 			)
@@ -69,8 +70,7 @@ class SocketHandler
 			socket.on('joinPaintSession', ({clientDimensions, paintSessionID}, callback) =>
 				ps = @paintSessions[paintSessionID]
 				console.log("looking up paintSessionID #{paintSessionID}")
-				console.log("got paintsession ")
-				console.log( JSON.stringify(ps) )
+
 				unless ps?
 					callback(
 						error: "No paint session found with id #{paintSessionID}"
@@ -78,7 +78,6 @@ class SocketHandler
 					return
 
 				primaryLayer = ps.addUser(user, clientDimensions)
-				console.log("joined paint session with primaryLayerID #{primaryLayer.id}")
 				@setupPaintSessionListeners(socket, ps, user)
 
 				ackMessage = {
@@ -118,6 +117,15 @@ class SocketHandler
 		drawing
 	}) =>
 
+		jsonSender = @io.sockets.in(paintSession.id).json
+
+		if drawing
+			paintSession.draw(layerID, canvasPos, user.color)
+		else
+			paintSession.move(layerID, canvasPos)
+			# it's ok if some non-drawing moves are lost
+			jsonSender = jsonSender.volatile
+
 		# rebuild moveData so we don't pass on arbitrary data from the client
 		remoteMoveData = {
 			userID: user.id
@@ -127,13 +135,6 @@ class SocketHandler
 		}
 
 		# echo to all clients
-		jsonSender = @io.sockets.in(paintSession.id).json
-		if drawing
-			paintSession.draw(layerID, canvasPos, user.color)
-		else
-			# it's ok if some non-drawing moves are lost
-			jsonSender = jsonSender.volatile
-
 		jsonSender.emit('remoteMove', remoteMoveData)
 
 	handleSetUserColor: (socket, paintSession, user, newColor) =>
