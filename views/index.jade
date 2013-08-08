@@ -11,13 +11,20 @@ block content
   .container
     .row
       .span10(id=holderName)
+        #interactionLayer
       #controls.span2
         label Name:
           input(type="text")
+        input(type="button", value="Get session invite", id="sessionInvite")
+
 
   script.
-    var paintSession = '#{paintSession}';
-    var client = new MultiPaint.Client('#{holderName}', paintSession);
+    var paintSessionID = '#{paintSession}';
+    var client = new MultiPaint.Client('#{holderName}', paintSessionID);
+    $('#sessionInvite').on('click', function(){
+      var invite = client.getPaintSessionInvite();
+      alert(invite);
+    });
 
     SB.disableBanners = true;
 

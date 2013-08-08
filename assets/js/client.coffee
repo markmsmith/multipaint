@@ -12,7 +12,11 @@ class MultiPaint.Client
 
 		holderDimensions = @_getHolderDimensions()
 		@holder.attr(holderDimensions)
-		@holder.css('height', holderDimensions.height)
+		# @holder.css('height', holderDimensions.height)
+
+		#TODO maybe switch this from an id to a class and search within holder
+		@interactionLayer = $("#interactionLayer")
+		@interactionLayer.attr(holderDimensions)
 
 		@socket = io.connect()
 
@@ -48,7 +52,7 @@ class MultiPaint.Client
 			# check without ? to handle empty string as falsey as well
 			if @paintSessionID
 				console.log("Joining existing paint session with ID #{@paintSessionID}.")
-				connectMessage.paintSession = @paintSessionID
+				connectMessage.paintSessionID = @paintSessionID
 				@socket.json.emit('joinPaintSession', connectMessage, @onJoinPaintSession)
 			else
 				console.log("Creating a new paint session to join.")
@@ -65,16 +69,15 @@ class MultiPaint.Client
 		holderDimensions = @_getHolderDimensions()
 		@layers = {}
 		_.each(layers, (layer) =>
-			layerID = layer.id
 
 			#TODO figure out how to deal with dimensions on client of other people's different sized layers
 			# just show as own size for now
 			layer.dimensions = holderDimensions
 
-			localLayer = @layers[layerID] = new MultiPaint.Layer(@holder, layer)
+			localLayer = @addLocalLayer(layer)
 
 			# check if it's the user's primary layer
-			if layerID == primaryLayerID
+			if layer.id == primaryLayerID
 				# selectedLayer is the layer they're currently drawing to
 				# the user's primary layer is one they can't delete
 				@selectedLayer = @primaryLayer = localLayer
@@ -95,10 +98,10 @@ class MultiPaint.Client
 			@resizeCanvas()
 
 		@socket.on('remoteMove', @handleRemoteMove)
+		@socket.on('userJoined', @handleUserJoined)
 
-		# only listen to the canvas for mouse move, so don't expand holder with avatar
-		#TODO enforce a 'primary layer canvas' for mouse listening
-		@primaryLayer.canvas.mousemove _.throttle((event) =>
+		# only listen to the interaction layer for mouse move, so don't expand holder with avatar
+		@interactionLayer.mousemove _.throttle((event) =>
 			position =
 				x: event.pageX
 				y: event.pageY
@@ -123,6 +126,7 @@ class MultiPaint.Client
 			@handleMove(position, false)
 
 
+		# check if this needs to be interaction layer to prevent same avater-expanding problem
 		@holder.on 'touchstart': (event) =>
 			# since touches can jump without first moving to the new location,
 			# need to update position first or we'll draw from the last touch location
@@ -161,6 +165,12 @@ class MultiPaint.Client
 		# 	color: '255,0,0'
 		# @addLocalUser(dummyUser)
 
+	getPaintSessionInvite: =>
+		return "#{window.location.origin}?paintSession=#{@paintSessionID}"
+
+	addLocalLayer: (layer) ->
+		@layers[layer.id] = new MultiPaint.Layer(@interactionLayer, layer)
+
 	addLocalUser: (user) ->
 		localUser =
 			id: user.id
@@ -184,21 +194,35 @@ class MultiPaint.Client
 				#TODO pick up after init
 				@bufferedColor = newColor
 
-	handleMove: (position, drawing=@drawing) ->
+	handleMove: (position, drawing=@drawing) =>
 		canvasPos = @windowToCanvasPos(position)
 		if @standalone
-			@moveLocalUser(@clientUser, canvasPos, drawing)
+			@moveLocalUser(@clientUser, @selectedLayer.id, canvasPos, drawing)
 		else
 			#TODO Add touch id / multi-touch support
 			moveData = {
+				layerID: @selectedLayer.id
 				canvasPos
 				drawing
 			}
 			@socket.json.emit('move', moveData)
 
-	handleRemoteMove: ({userID, canvasPos, drawing}) =>
-		#TODO move the right user
-		@moveLocalUser(@clientUser, canvasPos, drawing)
+	handleRemoteMove: ({userID, layerID, canvasPos, drawing}) =>
+		localUser = @users[userID]
+		unless localUser?
+			console.error('Received moved from unknown user: ', userID)
+			return
+
+
+		@moveLocalUser(localUser, layerID, canvasPos, drawing)
+
+	handleUserJoined: ({user, layer}) =>
+		if user.id == client.id
+			# ignore notifications about self
+			return
+
+		@addLocalLayer(layer)
+		@addLocalUser(user)
 
 	_getHolderDimensions: ->
 		body = $('body')
@@ -221,6 +245,7 @@ class MultiPaint.Client
 		)
 
 		@holder.attr(holderDimensions)
+		@interactionLayer.attr(holderDimensions)
 
 
 	windowToCanvasPos: (windowPos) ->
@@ -271,8 +296,7 @@ class MultiPaint.Client
 		newAvater = @createAvatar(localUser, oldPos)
 		localUser.avatar = newAvater
 
-	moveLocalUser: (localUser, position, drawing) ->
-		debugger
+	moveLocalUser: (localUser, layerID, position, drawing) ->
 		if drawing
 			offset = localUser.avatar.position()
 
@@ -280,13 +304,18 @@ class MultiPaint.Client
 				x: offset.left + 8
 				y: offset.top + 8
 
-			@selectedLayer.ctx.lineWidth = 3
-			@selectedLayer.ctx.strokeStyle = "rgba(#{localUser.color}, 0.8)"
-			@selectedLayer.ctx.beginPath()
-			@selectedLayer.ctx.moveTo(old.x, old.y)
-			@selectedLayer.ctx.lineTo(position.x, position.y)
-			@selectedLayer.ctx.closePath()
-			@selectedLayer.ctx.stroke()
+			layer = @layers[layerID]
+			unless layer?
+				console.error("Couldn't find layer with id #{layerID}")
+				return
+
+			layer.ctx.lineWidth = 3
+			layer.ctx.strokeStyle = "rgba(#{localUser.color}, 0.8)"
+			layer.ctx.beginPath()
+			layer.ctx.moveTo(old.x, old.y)
+			layer.ctx.lineTo(position.x, position.y)
+			layer.ctx.closePath()
+			layer.ctx.stroke()
 
 		localUser.avatar.css(
 			left: "#{position.x - 8}px"

@@ -1,3 +1,5 @@
+_ = require('lodash')
+
 class User
 	constructor: (@id, @nick, @color) ->
 		@socketIDs = []

@@ -2,9 +2,10 @@ ToDo
 ----
 - [x] Create a new paint session with it's own socket.io room
 - [x] Broadcast move and draw events to room
-- [ ] Save sever layer image data on draw events
+- [ ] Save server layer image data on draw events
 - [x] Make move events volatile (lossy)
-- [ ] Join a second client to an existing paint session
+- [x] Join a second client to an existing paint session
+- [ ] Use pushstate or fragments(#) to make url sharable
 - [ ] Add color picker palette
 - [ ] Have server honor remote color selections
 - [ ] Add thickness selector
@@ -22,11 +23,11 @@ ToDo
 - [ ] Support Chromecast (https://developers.google.com/cast/)
 - [ ] Support gamepad (http://www.gamepadjs.com/)
 - [ ] Investigate OAuth login for users
-- [ ] Have browser windowClose fire disconnect
+- [ ] Have browser windowClose fire disconnect (maybe not needed?)
 - [ ] Support web cam blob detection (figure out drawing start/stop)
 - [ ] Investigate WebRTC P2P comms (http://peerjs.com/ or https://github.com/share/ShareJS)
 - [ ] Add P2P audio/video streaming
 - [ ] Integrate $1 gesture recognizer
 - [ ] Better support window resizing
-- [ ] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
+- [x] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
 - [ ] Support offline work and then resync with oldest/most recent edit times on server and client

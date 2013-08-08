@@ -8,8 +8,7 @@ var express = require('express')
 	, MemoryStore = express.session.MemoryStore
 	, coffeeScript = require('coffee-script')
 	, SocketSession = require('./lib/SocketSession')
-	, SocketHandler = require('./lib/SocketHandler')
-	, lodash = require('lodash');
+	, SocketHandler = require('./lib/SocketHandler');
 
 var app = express();
 var sessionStore = new MemoryStore();

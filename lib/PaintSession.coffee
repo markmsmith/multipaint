@@ -36,7 +36,7 @@ class PaintSession
 		}
 		@editorCount++
 
-		return primaryLayer.id
+		return primaryLayer
 
 	getClientLayers: ->
 		return (layer for own id, layer of @layers)
@@ -44,18 +44,22 @@ class PaintSession
 	getClientEditors: ->
 		return (editor for own id, editor of @editors)
 
-		# ctx = canvas.getContext('2d')
-		# ctx.font = '30px Impact'
-		# ctx.rotate(.1)
-		# ctx.fillText("Awesome!", 50, 100)
+	getLayer: (layerID) ->
+		@layers[layerID]
 
-		# te = ctx.measureText('Awesome!')
-		# ctx.strokeStyle = 'rgba(0,0,0,0.5)'
-		# ctx.beginPath()
-		# ctx.lineTo(50, 102)
-		# ctx.lineTo(50 + te.width, 102)
-		# ctx.stroke()
+	move: (layerID, canvasPos) ->
+		layer = @getLayer(layerID)
+		unless layer
+			console.log("Invalid layer with id #{layerID} requested in paint session #{@id}")
+			return
+		layer.move(canvasPos)
 
-		# console.log('<img src="' + canvas.toDataURL() + '" />')
+	draw: (layerID, canvasPos, color) ->
+		layer = @getLayer(layerID)
+		unless layer
+			console.log("Invalid layer with id #{layerID} requested in paint session #{@id}")
+			return
+
+		layer.draw(canvasPos, color)
 
 module.exports = PaintSession

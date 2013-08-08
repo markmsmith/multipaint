@@ -5,6 +5,10 @@ class ServerLayer
 		@canvas = new Canvas(@dimensions.width, @dimensions.height)
 		@ctx = @canvas.getContext('2d')
 
+		@old =
+			x: 0
+			y: 0
+
 	toJSON: ->
 		return {
 			@id
@@ -14,5 +18,35 @@ class ServerLayer
 			@writeProtect
 			imageData: @canvas.toDataURL()
 		}
+
+	move: (canvasPos) ->
+		@old = canvasPos
+
+	draw: (canvasPos, color) ->
+		@ctx.lineWidth = 3
+		@ctx.strokeStyle = "rgba(#{color}, 0.8)"
+		@ctx.beginPath()
+		@ctx.moveTo(@old.x, @old.y)
+		@ctx.lineTo(canvasPos.x, canvasPos.y)
+		@ctx.closePath()
+		@ctx.stroke()
+
+		@old = canvasPos
+
+
+
+		# ctx = canvas.getContext('2d')
+		# ctx.font = '30px Impact'
+		# ctx.rotate(.1)
+		# ctx.fillText("Awesome!", 50, 100)
+
+		# te = ctx.measureText('Awesome!')
+		# ctx.strokeStyle = 'rgba(0,0,0,0.5)'
+		# ctx.beginPath()
+		# ctx.lineTo(50, 102)
+		# ctx.lineTo(50 + te.width, 102)
+		# ctx.stroke()
+
+		# console.log('<img src="' + canvas.toDataURL() + '" />')
 
 module.exports = ServerLayer
