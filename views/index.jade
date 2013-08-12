@@ -7,42 +7,16 @@ block head
   != js('Layer')
 block content
   h1= title
-  p Welcome to #{title}
   .container
     .row
       .span10(id=holderName)
         #interactionLayer
       #controls.span2
-        label Name:
-          input(type="text")
-        input(type="button", value="Get session invite", id="sessionInvite")
-
+        label(for='userNick') Name:
+          input(type='text', id='userNick', name='userNick')
+        input(type='button', value='Invite others!', id='sessionInvite')
 
   script.
-    var paintSessionID = '#{paintSession}';
-    var client = new MultiPaint.Client('#{holderName}', paintSessionID);
-    $('#sessionInvite').on('click', function(){
-      var invite = client.getPaintSessionInvite();
-      alert(invite);
-    });
-
-    SB.disableBanners = true;
-
-    // not required since we don't need SB.onPoint()
-    SB.wantsSDKEvents = false
-
-    // don't need touch event, since we can just use normal mouse events
-    //TODO check if needed multi-touch
-    SB.wantsTouches = false;
-
-    SB.onToolChange = function(evt){
-      if (typeof(evt.tool) != "undefined"){
-          switch(evt.tool) {
-            case "polyline":
-            case "pen":
-              client.setUserColor( evt.color.join(',') );
-            break;
-          }
-      }
-    };
-
+    initialPaintSessionID = '#{paintSession}';
+    holderName = '#{holderName}';
+  != js('init')

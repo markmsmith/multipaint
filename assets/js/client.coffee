@@ -2,6 +2,21 @@ window.MultiPaint ?= {}
 
 class MultiPaint.Client
 
+	handleHistoryPopState: (event) ->
+
+		###
+		for now just reload the page, later we can tell the client to clean up
+		and switch paint sessions
+		###
+		console.log("historyPopState: event: ", event)
+		storedPaintSessionID = event.state?.paintSessionID
+		if storedPaintSessionID?
+			console.log("historyPopState: Loading paint session ${storedPaintSessionID}")
+			window.location = "?paintSession=#{@storedPaintSessionID}&fromPopState=true"
+		else
+			console.log("historyPopState: No storedPaintSessionID, reloading page.")
+			window.location.reload()
+
 	# holderID is the id of the element to hold the canvas
 	# paintSession is the GUUID of an existing session to join, or empty
 	constructor: (@holderID, @paintSessionID) ->
@@ -51,7 +66,7 @@ class MultiPaint.Client
 
 			# check without ? to handle empty string as falsey as well
 			if @paintSessionID
-				console.log("Joining existing paint session with ID #{@paintSessionID}.")
+				console.log("Attempting to join existing paint session with ID #{@paintSessionID}.")
 				connectMessage.paintSessionID = @paintSessionID
 				@socket.json.emit('joinPaintSession', connectMessage, @onJoinPaintSession)
 			else
@@ -66,6 +81,17 @@ class MultiPaint.Client
 		editors
 		clientID
 	}) =>
+
+		console.log("Joined paint session #{@paintSessionID}")
+
+		stateObj = {
+			@paintSessionID
+		}
+
+		console.log("historyPopState: replacing state: ", stateObj)
+		history.replaceState(stateObj, 'MultiPaint', "?paintSession=#{@paintSessionID}")
+		window.onpopstate = @handleHistoryPopState
+
 		holderDimensions = @_getHolderDimensions()
 		@layers = {}
 		_.each(layers, (layer) =>
@@ -100,6 +126,8 @@ class MultiPaint.Client
 		@socket.on('remoteMove', @handleRemoteMove)
 		@socket.on('userJoined', @handleUserJoined)
 		@socket.on('userLeft', @handleUserLeft)
+		@socket.on('userNickChange', @handeRemoteUserNickChange)
+		@socket.on('userColorChange', @handeRemoteUserColorChange)
 
 		# only listen to the interaction layer for mouse move, so don't expand holder with avatar
 		@interactionLayer.mousemove _.throttle((event) =>
@@ -169,16 +197,16 @@ class MultiPaint.Client
 	getPaintSessionInvite: =>
 		return "#{window.location.origin}?paintSession=#{@paintSessionID}"
 
-	addLocalLayer: (layer) ->
-		@layers[layer.id] = new MultiPaint.Layer(@interactionLayer, layer)
+	addLocalLayer: (serverLayer) ->
+		@layers[serverLayer.id] = new MultiPaint.Layer(@interactionLayer, serverLayer)
 
-	addLocalUser: (user) ->
+	addLocalUser: (serverUser) ->
 		localUser =
-			id: user.id
-			nick: user.nick
-			color: user.color
-			avatar: @createAvatar(user)
-		@users[user.id] = localUser
+			id: serverUser.id
+			nick: serverUser.nick
+			color: serverUser.color
+			avatar: @createAvatar(serverUser)
+		@users[serverUser.id] = localUser
 		@userCount++
 
 		return localUser
@@ -189,7 +217,21 @@ class MultiPaint.Client
 		delete @users[user.id]
 		@userCount--
 
-	setUserColor: (newColor) ->
+	handleRemoteUserAttrChange: (userID, attrName, newValue) =>
+		localUser = @users[userID]
+		unless localUser?
+			console.error("Couldn't find user with userID #{userID} for #{attrName} change.")
+			return
+		localUser[attrName] = newValue
+		@redrawAvatar(localUser)
+
+	setUserNick: (newNick) =>
+		@socket.emit('setUserNick', newNick)
+
+	handeRemoteUserNickChange: ({userID, nick}) =>
+		@handleRemoteUserAttrChange(userID, 'nick', nick)
+
+	setUserColor: (newColor) =>
 		if @standalone
 			@clientUser.color = newColor
 			@redrawAvatar(@clientUser)
@@ -200,6 +242,9 @@ class MultiPaint.Client
 			else
 				#TODO pick up after init
 				@bufferedColor = newColor
+
+	handeRemoteUserColorChange: ({userID, color}) =>
+		@handleRemoteUserAttrChange(userID, 'color', color)
 
 	handleMove: (position, drawing=@drawing) =>
 		canvasPos = @windowToCanvasPos(position)
@@ -217,21 +262,21 @@ class MultiPaint.Client
 	handleRemoteMove: ({userID, layerID, canvasPos, drawing}) =>
 		localUser = @users[userID]
 		unless localUser?
-			console.error('Received moved from unknown user: ', userID)
+			console.error('Received move from unknown user: ', userID)
 			return
 
 
 		@moveLocalUser(localUser, layerID, canvasPos, drawing)
 
 	handleUserJoined: ({user, layer}) =>
-		if user.id == client.id
+		if user.id == @clientUser.id
 			# ignore notifications about self
 			return
 
 		@addLocalLayer(layer)
 		@addLocalUser(user)
 
-	handleUserLeft: (userID) =>
+	handleUserLeft: (user) =>
 		@removeLocalUser(userID)
 		#TODO other cleanup
 

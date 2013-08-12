@@ -26,9 +26,8 @@ class MultiPaint.Layer
 	resize: (newDimensions) ->
 		# changing the canvas dimensions clears it in some browser, so redraw the data
 		currentData = @canvasEl.toDataURL()
-		image = @_imageFromDataUrl(currentData)
-
-		@canvas.attr(newDimensions)
-
-		@ctx.clearRect(0, 0, @canvasEl.width, @canvasEl.height)
-		@ctx.drawImage(image, 0, 0)
+		@_imageFromDataUrl(currentData, (image) =>
+			@canvas.attr(newDimensions)
+			@ctx.clearRect(0, 0, @canvasEl.width, @canvasEl.height)
+			@ctx.drawImage(image, 0, 0)
+		)

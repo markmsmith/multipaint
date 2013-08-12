@@ -5,7 +5,7 @@ ServerLayer = require('./ServerLayer')
 class PaintSession
 	constructor: (@owner, ownerDimensions) ->
 		@id = uid(24)
-		console.log("New paint session, id #{@id}")
+		console.log("New paint session with ID #{@id}")
 
 		@editors = {}
 		@editorCount = 0

@@ -5,9 +5,10 @@ ToDo
 - [x] Save server layer image data on draw events
 - [x] Make move events volatile (lossy)
 - [x] Join a second client to an existing paint session
-- [ ] Use pushstate or fragments(#) to make url sharable
+- [x] Allow setting user nickname
+- [x] Use pushstate or fragments(#) to make url sharable
 - [ ] Add color picker palette
-- [ ] Have server honor remote color selections
+- [x] Have server honor remote color selections
 - [ ] Add thickness selector
 - [ ] Allow adding secondary layers
 - [ ] Support multi-touch (iPad)
