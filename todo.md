@@ -7,6 +7,8 @@ ToDo
 - [x] Join a second client to an existing paint session
 - [x] Allow setting user nickname
 - [x] Use pushstate or fragments(#) to make url sharable
+- [x] Switch to loading client dependencies via Bower
+- [x] Add color picker
 - [ ] Add color picker palette
 - [x] Have server honor remote color selections
 - [ ] Add thickness selector
@@ -16,6 +18,7 @@ ToDo
 - [ ] Support Leap multi-touch
 - [ ] Supprt image upload layer
 - [ ] Support saving
+- [ ] Fix page layout
 - [ ] Handle clean-up of disconnected users' layers?  Allow reattach?
 - [ ] Support attaching to Rally story
 - [ ] Support phone trackpad with QR registration (like reveal.js)

@@ -17,11 +17,12 @@ var cookieParser = express.cookieParser(COOKIE_SECRET);
 var SESSION_COOKIE_KEY = 'multipaint.sid';
 
 var config = {
-	port: process.env.PORT || 3000,
-	publicDirName: 'public'
+	port: process.env.PORT || 3000
 };
 
-var publicDir = path.join(__dirname, config.publicDirName);
+var publicDir = path.join(__dirname, 'public');
+var clientLibsDir = path.join(__dirname, 'bower_components');
+
 //TODO figure out how to do production serving
 app.use( assets() );
 
@@ -39,6 +40,8 @@ app.use(express.session({
 	store: sessionStore
 }));
 app.use(app.router);
+
+app.use('/clientLibs', express.static(clientLibsDir));
 app.use(express.static(publicDir));
 
 // development only

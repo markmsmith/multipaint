@@ -14,11 +14,16 @@ The goal of this app is to support:
     * Leap Motion
     * Mobile screen (a-la https://github.com/Remotes/Remotes)
 
-Install dependencies:
+Install Dependencies
+--------------------
+Install the server modules using npm:
 
-  npm install
-![dependencies status](https://david-dm.org/markmsmith/multipaint.png)
+`npm install` ![dependencies status](https://david-dm.org/markmsmith/multipaint.png)
+
+then install the client-side dependencies using [Bower](http://bower.io/):
+
+  node_modules/bower/bin/bower install
 
 Then do:
 
-	npm start
+    npm start

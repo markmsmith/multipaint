@@ -17,6 +17,36 @@ $('#userNick').keyup( (event) ->
 		client.setUserNick(newNick)
 )
 
+colorPicker = $('#colorPicker')
+hideSwatch = _.debounce( ->
+	colorPicker.minicolors('hide')
+, 1200)
+
+minColorsConfig =
+	changeDelay: 500
+	change: (hex, opacity) ->
+		{r,g,b} = colorPicker.minicolors('rgbObject')
+		client.setUserColor("#{r},#{g},#{b}")
+		hideSwatch()
+
+colorPicker.minicolors(minColorsConfig)
+
+rgbToHex = (rgbStr) ->
+	[r, g, b] = rgbStr.split(',')
+	hex = [
+		parseInt(r, 10).toString(16)
+		parseInt(g, 10).toString(16)
+		parseInt(b, 10).toString(16)
+	]
+	for val, index in hex
+	  if val.length == 1
+	    hex[index] = '0' + val
+	return '#' + hex.join('')
+
+client.on('colorChange', (newColor)->
+	colorPicker.minicolors('value', rgbToHex(newColor))
+)
+
 SB.disableBanners = true
 
 # not required since we don't need SB.onPoint()

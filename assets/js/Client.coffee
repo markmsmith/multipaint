@@ -20,6 +20,9 @@ class MultiPaint.Client
 	# holderID is the id of the element to hold the canvas
 	# paintSession is the GUUID of an existing session to join, or empty
 	constructor: (@holderID, @paintSessionID) ->
+		# add support for emitting events
+		new EventEmitter().apply(this)
+
 		# whether we're talking to a server before changing the UI
 		@standalone = false
 		@viewport = $(window)
@@ -119,6 +122,8 @@ class MultiPaint.Client
 			if serverUser.id == clientID
 				@clientUser = localUser
 		)
+
+		this.emit('colorChange', @clientUser.color)
 
 		@viewport.resize =>
 			@resizeCanvas()
@@ -237,7 +242,6 @@ class MultiPaint.Client
 			@redrawAvatar(@clientUser)
 		else
 			if @ready
-				#TODO update server color properly
 				@socket.emit('setUserColor', newColor)
 			else
 				#TODO pick up after init

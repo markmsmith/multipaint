@@ -13,7 +13,9 @@ block content
         #interactionLayer
       #controls.span2
         label(for='userNick') Name:
-          input(type='text', id='userNick', name='userNick')
+        input(type='text', id='userNick', name='userNick')
+        label(for='colorPicker') Color:
+        input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
         input(type='button', value='Invite others!', id='sessionInvite')
 
   script.
