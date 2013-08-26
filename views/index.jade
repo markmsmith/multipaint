@@ -1,24 +1,33 @@
 extends layout
 
 block head
-  script(src='/javascripts/vendor/smartboard-1.0.0.js')
-  script(src='/socket.io/socket.io.js')
-  != js('Client')
-  != js('Layer')
-block content
-  h1= title
-  .container
-    .row
-      .span10(id=holderName)
-        #interactionLayer
-      #controls.span2
-        label(for='userNick') Name:
-        input(type='text', id='userNick', name='userNick')
-        label(for='colorPicker') Color:
-        input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
-        input(type='button', value='Invite others!', id='sessionInvite')
 
-  script.
-    initialPaintSessionID = '#{paintSession}';
-    holderName = '#{holderName}';
-  != js('init')
+	link(rel='stylesheet', href='/clientLibs/jquery-minicolors/jquery.minicolors.css')
+	script(src='/clientLibs/jquery-minicolors/jquery.minicolors.js')
+
+	script(src='/javascripts/vendor/smartboard-1.0.0.js')
+	script(src='/socket.io/socket.io.js')
+
+	script(src='/clientLibs/event_emitter/event_emitter.min.js')
+
+	link(rel='stylesheet', href='/stylesheets/style.css')
+
+	!= js('Client')
+	!= js('Layer')
+block content
+	h1= title
+	.container
+		.row
+			.span10(id=holderName)
+				#interactionLayer
+			#controls.span2
+				label(for='userNick') Name:
+				input(type='text', id='userNick', name='userNick')
+				label(for='colorPicker') Color:
+				input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
+				input(type='button', value='Invite others!', id='sessionInvite')
+
+	script.
+		initialPaintSessionID = '#{paintSession}';
+		holderName = '#{holderName}';
+	!= js('init')

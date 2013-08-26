@@ -1,0 +1,25 @@
+extends layout
+
+block head
+	link(rel='stylesheet', href='/stylesheets/login.css')
+	title #{title} - Welcome
+
+block content
+
+	h1 Welcome to #{title}
+	.container
+		form.form-signin(action="/auth/rally", method="post")
+			h2.form-signin-heading Please sign in
+			input.input-block-level(type="text", placeholder="Rally Username", name="username")
+			input.input-block-level(type="password", placeholder="Password", name="password")
+			button.btn(type="submit")
+					img(src="/images/rally_login.png")
+					| Sign in
+			div.or OR
+			- var providers = ["google", "facebook", "github"];
+			each provider in providers
+				a.btn.btn-block(id="#{provider}Login", href="/auth/#{provider}")
+					img(src="/images/#{provider}_login.png")
+					| Sign in with #{provider}
+
+	!= js('login')

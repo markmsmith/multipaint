@@ -1,10 +1,6 @@
 {
   "name": "multipaint",
   "author": "Mark Smith <MarkMackenzieSmith@gmail.com> (https://github.com/markmsmith/multipaint)",
-  "contributors": [
-    "Nate Kohari <nkohari@gmail.com> (https://github.com/nkohari/fingerpaint)",
-    "Paul Irish (http://www.paulirish.com/demo/multi)"
-  ],
   "version": "0.8.0",
   "scripts": {
     "start": "node app.js"
@@ -18,10 +14,18 @@
     "lodash": "1.3.1",
     "uid2": "0.0.2",
     "canvas": "~1.0.3",
-    "bower": "~1.1.2"
+    "bower": "~1.1.2",
+    "passport": "~0.1.17",
+    "passport-google-oauth": "~0.1.5",
+    "passport-facebook": "~1.0.0",
+    "passport-zuul": "git://github.com/RallySoftware/passport-zuul",
+    "passport-github": "~0.1.5"
   },
   "license": "MIT",
   "engines": {
     "node": ">=0.8"
+  },
+  "devDependencies": {
+    "coffeelint": "~0.5.7"
   }
 }

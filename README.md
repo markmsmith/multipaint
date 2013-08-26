@@ -27,3 +27,7 @@ then install the client-side dependencies using [Bower](http://bower.io/):
 Then do:
 
     npm start
+
+### Inspired by:
+    Nate Kohari (https://github.com/nkohari/fingerpaint)
+    Paul Irish (http://www.paulirish.com/demo/multi)

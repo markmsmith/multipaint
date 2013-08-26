@@ -39,11 +39,11 @@ rgbToHex = (rgbStr) ->
 		parseInt(b, 10).toString(16)
 	]
 	for val, index in hex
-	  if val.length == 1
-	    hex[index] = '0' + val
+		if val.length == 1
+			hex[index] = '0' + val
 	return '#' + hex.join('')
 
-client.on('colorChange', (newColor)->
+client.on('colorChange', (newColor) ->
 	colorPicker.minicolors('value', rgbToHex(newColor))
 )
 
