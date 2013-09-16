@@ -154,11 +154,6 @@ class MultiPaint.Client
 		# of the canvas before releasing, it still stops drawing
 		$(document).mouseup (event) =>
 			delete @touchesInProgress[@MOUSE_TOUCH_ID]
-			position =
-				x: event.pageX
-				y: event.pageY
-			@setStatus("mouseUp :\n#{JSON.stringify(position)}")
-			@handleMove(@MOUSE_TOUCH_ID, position, false)
 
 		# if exit and renter, update position so don't draw line from exit point
 		@holder.mouseenter (event) =>
@@ -403,21 +398,17 @@ class MultiPaint.Client
 			unless drawing
 				# bail out if we're not drawing, killing the avater if necessary
 				if avatar?
-					console.log("removing secondary avatar")
 					avatar.remove()
 					delete localUser.secondaryAvatars[touchID]
 				return
 
 			# must be drawing, so make sure we have an avatar
 			unless avatar?
-				console.log("creating new secondary avatar")
 				cssPos =
 					left: position.x - 8
 					top: position.y - 8
 				avatar = @createAvatar(localUser, cssPos, touchID)
 				localUser.secondaryAvatars[touchID] = avatar
-			else
-				console.log('existing avatar')
 
 		if drawing
 			offset = avatar.position()
@@ -425,8 +416,6 @@ class MultiPaint.Client
 			old =
 				x: offset.left + 8
 				y: offset.top + 8
-
-			console.log("drawing from old position: ", old)
 
 			layer = @layers[layerID]
 			unless layer?
@@ -448,5 +437,5 @@ class MultiPaint.Client
 
 	setStatus: (message) ->
 		console.log(message)
-		statusArea = $('#statusArea')
-		statusArea.val("#{message}\n#{statusArea.val()}")
+		# statusArea = $('#statusArea')
+		# statusArea.val("#{message}\n#{statusArea.val()}")

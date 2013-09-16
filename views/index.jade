@@ -26,11 +26,11 @@ block content
 				#interactionLayer
 			#controls.span2
 				label(for='userNick') Name:
-				input(type='text', id='userNick', name='userNick')
+					input(type='text', id='userNick', name='userNick')
 				label(for='colorPicker') Color:
-				input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
-				input(type='button', value='Invite others!', id='sessionInvite')
-				textarea(id='statusArea', editable='false', cols='8', rows='10')
+					input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
+				input#sessionInvite.btn(type='button', value='Invite others!')
+				//- textarea(id='statusArea', editable='false', cols='8', rows='10')
 
 	#myModal.modal.hide.fade
 		.modal-header

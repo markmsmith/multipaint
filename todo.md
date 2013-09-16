@@ -6,35 +6,37 @@ ToDo
 - [x] Make move events volatile (lossy)
 - [x] Join a second client to an existing paint session
 - [x] Allow setting user nickname
+- [x] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
 - [x] Use pushstate or fragments(#) to make url sharable
 - [x] Switch to loading client dependencies via Bower
 - [x] Add color picker
-- [ ] Add color picker palette
 - [x] Have server honor remote color selections
-- [ ] Add thickness selector
-- [ ] Allow adding secondary layers
 - [x] Support multi-touch (iPad)
 - [b] Support SmartBoard multi-touch (blocked on WDK touch event bugs)
-- [ ] Support Leap multi-touch
+- [x] Support joining with QR registration
+- [*] Investigate OAuth login for users
+- [ ] Add thickness selector
+- [ ] Allow adding secondary layers
 - [ ] Supprt image upload layer
 - [ ] Support saving as image
 - [ ] Support saving to database (preserving layers)
 - [ ] Support attaching to Rally story as flattened image
 - [ ] Support saving to google drive (like conceptboard.com)
-- [ ] Fix page layout by moving to fixed initial size + expand buttons (+optimize canvas to window position calculation)
+- [ ] Fix page layout by moving to fixed initial size + expand buttons
+	- [ ] Optimize canvas -> window position calculation)
+- [ ] Support Leap multi-touch
+- [ ] Better support window resizing
 - [ ] Rework to use optimistic drawing (draw immediately, don't wait on roundtrip)
 - [ ]		Allow server to undo invalid edits somehow (maybe just forbid on client, monkeying just means it won't be saved?)
 - [ ] Support a vector layer
 - [ ] Support creating a library of templates (both page-level and component/stamp-level)
 - [ ] Handle clean-up of disconnected users' layers?  Allow reattach?
-- [x] Support joining with QR registration
 - [ ] Add different interactions for different screen sizes
 	- [ ] Maybe show rectangle of visible/editable area in this mode, 2-finger pan?
 	- [ ] 3-finger pan for larger screens that would still want 2 finger multi-touch?
 - [ ] Support windows 8 touch w/ pressure sensitivity
 - [ ] Support Chromecast (https://developers.google.com/cast/)
 - [ ] Support gamepad (http://www.gamepadjs.com/)
-- [ ] Investigate OAuth login for users
 - [ ] Refactor to editors vs users concept (a single user can be multiple editors with different colors)
 - [ ] Support avatar customization?  Gravatar?
 - [ ] Display user presence in top corner like google docs
@@ -43,8 +45,6 @@ ToDo
 - [ ] Investigate WebRTC P2P comms (http://peerjs.com/ or https://github.com/share/ShareJS)
 - [ ] Add P2P audio/video streaming
 - [ ] Integrate $1 gesture recognizer
-- [ ] Better support window resizing
-- [x] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
 - [ ] Support offline work and then resync with oldest/most recent edit times on server and client
 - [ ] Figure out what to do about lost move events that tell other clients drawing=false before next drawing=true
 - [ ] Figure out what to do about missing touchRecords due to server lag and mouseup/touchend-acks that arrive after starting a new mousedown/touchstart
