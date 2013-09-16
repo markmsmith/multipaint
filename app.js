@@ -37,10 +37,6 @@ var config = {
   github: {
     clientID: process.env.GITHUB_CLIENT_ID || '6ca12a1247913e3196f7',
     clientSecret: process.env.GITHUB_CLIENT_SECRET || '044bf9086f06ff746c7154de7fdd1406fa16b427'
-  },
-
-  windowLive: {
-
   }
 };
 

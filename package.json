@@ -19,7 +19,9 @@
     "passport-google-oauth": "~0.1.5",
     "passport-facebook": "~1.0.0",
     "passport-zuul": "git://github.com/RallySoftware/passport-zuul",
-    "passport-github": "~0.1.5"
+    "passport-github": "~0.1.5",
+    "stylus": "~0.37.0",
+    "nib": "~1.0.1"
   },
   "license": "MIT",
   "engines": {

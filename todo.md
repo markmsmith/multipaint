@@ -14,7 +14,7 @@ ToDo
 - [x] Support multi-touch (iPad)
 - [b] Support SmartBoard multi-touch (blocked on WDK touch event bugs)
 - [x] Support joining with QR registration
-- [*] Investigate OAuth login for users
+- [x] Move to stylus
 - [ ] Add thickness selector
 - [ ] Allow adding secondary layers
 - [ ] Supprt image upload layer
@@ -24,6 +24,10 @@ ToDo
 - [ ] Support saving to google drive (like conceptboard.com)
 - [ ] Fix page layout by moving to fixed initial size + expand buttons
 	- [ ] Optimize canvas -> window position calculation)
+- [*] Investigate OAuth login for users [implemented Rally, Google, GitHub and Facebook, but not wired in]
+- [ ] Refactor to editors vs users concept (a single user can be multiple editors with different colors)
+- [ ] Support avatar customization?  Gravatar?
+- [ ] Display user presence in top corner like google docs
 - [ ] Support Leap multi-touch
 - [ ] Better support window resizing
 - [ ] Rework to use optimistic drawing (draw immediately, don't wait on roundtrip)
@@ -37,9 +41,6 @@ ToDo
 - [ ] Support windows 8 touch w/ pressure sensitivity
 - [ ] Support Chromecast (https://developers.google.com/cast/)
 - [ ] Support gamepad (http://www.gamepadjs.com/)
-- [ ] Refactor to editors vs users concept (a single user can be multiple editors with different colors)
-- [ ] Support avatar customization?  Gravatar?
-- [ ] Display user presence in top corner like google docs
 - [ ] Have browser windowClose fire disconnect (maybe not needed?)
 - [ ] Support web cam blob detection (figure out drawing start/stop)
 - [ ] Investigate WebRTC P2P comms (http://peerjs.com/ or https://github.com/share/ShareJS)
