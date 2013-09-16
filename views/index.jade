@@ -2,13 +2,17 @@ extends layout
 
 block head
 
+	//- prevent scaling to allow multi-touch without the browser fighting the user
+	meta(name='viewport', content='width=device-width, initial-scale=1.0, user-scalable=no')
+
 	link(rel='stylesheet', href='/clientLibs/jquery-minicolors/jquery.minicolors.css')
 	script(src='/clientLibs/jquery-minicolors/jquery.minicolors.js')
 
-	script(src='/javascripts/vendor/smartboard-1.0.0.js')
+	script(src='/javascripts/vendor/smartboard-1.1.0.js')
 	script(src='/socket.io/socket.io.js')
 
 	script(src='/clientLibs/event_emitter/event_emitter.min.js')
+	script(src='/clientLibs/jquery-qrcode/jquery.qrcode.min.js')
 
 	link(rel='stylesheet', href='/stylesheets/style.css')
 
@@ -26,7 +30,22 @@ block content
 				label(for='colorPicker') Color:
 				input(type='hidden', id='colorPicker', class='colorPicker', value='#000000')
 				input(type='button', value='Invite others!', id='sessionInvite')
+				textarea(id='statusArea', editable='false', cols='8', rows='10')
 
+	#myModal.modal.hide.fade
+		.modal-header
+				button.close(type='button', data-dismiss='modal', aria-hidden='true') ×
+				h3 Invite Others
+
+			.modal-body
+				p Share this link with others to have them paint with you:
+					br
+					a#shareLink link loading...
+				p or have them scan this QR code:
+					#shareQR
+
+			.modal-footer
+				a.btn.btn-primary(data-dismiss='modal') Close
 	script.
 		initialPaintSessionID = '#{paintSession}';
 		holderName = '#{holderName}';

@@ -6,6 +6,11 @@ h1 { text-align: center }
 label, .minicolors { padding: 5px; }
 #sessionInvite { display: block; }
 
+#shareQR {
+	text-align: center;
+	margin-top: 10px;
+}
+
 .fill {
   height: 100%;
   min-height: 100%;
@@ -28,7 +33,7 @@ label, .minicolors { padding: 5px; }
 	margin: 0px;
 }
 
-canvas {
+canvas.sketchArea, avatar canvas {
 	position: absolute;
 	left: 0px;
 	top: 0px;

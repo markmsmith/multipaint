@@ -1,9 +1,18 @@
 
 client = new MultiPaint.Client(holderName, initialPaintSessionID)
-$('#sessionInvite').on('click', ->
+$('#sessionInvite').on('click', (e) ->
+	e.stopPropagation()
 	inviteUrl = client.getPaintSessionInvite()
-	msg = "Share this link with others to have them paint with you:\n\n#{inviteUrl}"
-	alert(msg)
+	$('#shareLink').attr('href', inviteUrl).text(inviteUrl)
+
+	qrOptions =
+		width: 128
+		height: 128
+		text: inviteUrl
+	$('#shareQR').qrcode(qrOptions)
+
+	$('#myModal').modal()
+	return false
 )
 
 $('#userNick').keyup( (event) ->
@@ -52,12 +61,25 @@ SB.disableBanners = true
 # not required since we don't need SB.onPoint()
 SB.wantsSDKEvents = false
 
-# don't need touch event, since we can just use normal mouse events
-#TODO check if needed multi-touch
-SB.wantsTouches = false
+SB.wantsTouches = true
+
+# required for smartboard-1.1.0+
+SB.initializeSMARTBoard()
+
+SB.useMouseEvents(false)
 
 SB.onToolChange = (evt) ->
 	if evt.tool?
 		switch evt.tool
 			when 'polyline', 'pen'
-				client.setUserColor( evt.color.join(',') )
+				newColor = evt.color
+				if newColor?
+					newColor = newColor.join(',')
+					currentColor = client.getUserColor()
+					if newColor != currentColor
+						client.setUserColor(newColor)
+
+# SB.wantsSDKEvents = true
+# SB.onPoint = (x, y, packet) ->
+# 			if packet?
+			#showTouch(packet);

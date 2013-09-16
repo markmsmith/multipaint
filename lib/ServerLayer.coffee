@@ -5,9 +5,7 @@ class ServerLayer
 		@canvas = new Canvas(@dimensions.width, @dimensions.height)
 		@ctx = @canvas.getContext('2d')
 
-		@old =
-			x: 0
-			y: 0
+		@avatarPositions = {}
 
 	toJSON: ->
 		return {
@@ -19,20 +17,23 @@ class ServerLayer
 			imageData: @canvas.toDataURL()
 		}
 
-	move: (canvasPos) ->
-		@old = canvasPos
+	move: (touchID, canvasPos) ->
+		@avatarPositions[touchID] = canvasPos
 
-	draw: (canvasPos, color) ->
+	draw: (touchID, canvasPos, color) ->
+		old = @avatarPositions[touchID] ?
+			x: 0
+			y: 0
 
 		@ctx.lineWidth = 3
 		@ctx.strokeStyle = "rgba(#{color}, 0.8)"
 		@ctx.beginPath()
-		@ctx.moveTo(@old.x, @old.y)
+		@ctx.moveTo(old.x, old.y)
 		@ctx.lineTo(canvasPos.x, canvasPos.y)
 		@ctx.closePath()
 		@ctx.stroke()
 
-		@old = canvasPos
+		@avatarPositions[touchID] = canvasPos
 
 
 

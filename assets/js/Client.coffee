@@ -2,6 +2,8 @@ window.MultiPaint ?= {}
 
 class MultiPaint.Client
 
+	MOUSE_TOUCH_ID: -1,
+
 	handleHistoryPopState: (event) ->
 
 		###
@@ -23,6 +25,8 @@ class MultiPaint.Client
 		# add support for emitting events
 		new EventEmitter().apply(this)
 
+		@touchesInProgress = {}
+
 		# whether we're talking to a server before changing the UI
 		@standalone = false
 		@viewport = $(window)
@@ -38,31 +42,25 @@ class MultiPaint.Client
 
 		@socket = io.connect()
 
-		@socket.on('connecting', ->
+		@socket.on 'connecting', ->
 			console.log('Connecting...')
-		)
 
-		@socket.on('connect_failed', ->
+		@socket.on 'connect_failed', ->
 			console.log("Failed to connect")
-		)
 
-		@socket.on('disconnect', ->
+		@socket.on 'disconnect', ->
 			console.log('Disconnected')
-		)
 
-		@socket.on('reconnecting', (nextRetry) ->
+		@socket.on 'reconnecting', (nextRetry) ->
 			console.log("Reconnecting in #{nextRetry} seconds...")
-		)
 
-		@socket.on('reconnect', ->
+		@socket.on 'reconnect', ->
 			console.log("Reconnected")
-		)
 
-		@socket.on('error', (e) ->
+		@socket.on 'error', (e) ->
 			console.log('An error occurred connecting to socket: ', e ? 'A unknown error occurred')
-		)
 
-		@socket.on('connect', =>
+		@socket.on 'connect', =>
 			console.log('Connected')
 			connectMessage =
 				clientDimensions: holderDimensions
@@ -75,7 +73,6 @@ class MultiPaint.Client
 			else
 				console.log("Creating a new paint session to join.")
 				@socket.json.emit('createPaintSession', connectMessage, @onJoinPaintSession)
-		)
 
 	onJoinPaintSession: ({
 		@paintSessionID
@@ -121,9 +118,9 @@ class MultiPaint.Client
 
 			if serverUser.id == clientID
 				@clientUser = localUser
+				this.emit('colorChange', @clientUser.color)
 		)
 
-		this.emit('colorChange', @clientUser.color)
 
 		@viewport.resize =>
 			@resizeCanvas()
@@ -134,60 +131,87 @@ class MultiPaint.Client
 		@socket.on('userNickChange', @handeRemoteUserNickChange)
 		@socket.on('userColorChange', @handeRemoteUserColorChange)
 
-		# only listen to the interaction layer for mouse move, so don't expand holder with avatar
-		@interactionLayer.mousemove _.throttle((event) =>
-			position =
-				x: event.pageX
-				y: event.pageY
-			@handleMove(position)
-		, 50)
-
 		# need to listen to holder (rather than canvas), since avatar canvas is in the way and
 		# is a sibling of the drawing canvas
 		@holder.mousedown (event) =>
-			@drawing = true
+			@touchesInProgress[@MOUSE_TOUCH_ID] = true
+			@setStatus("mouseDown")
+
+		onMouseMove = (event) =>
+			drawing = @touchesInProgress[@MOUSE_TOUCH_ID] ? false
+
+			position =
+				x: event.pageX
+				y: event.pageY
+			@setStatus("mouseMove :\n#{JSON.stringify(position)}")
+			@handleMove(@MOUSE_TOUCH_ID, position, drawing)
+
+		# only listen to the interaction layer for mouse move, so don't expand holder with avatar
+		# @interactionLayer.mousemove(onMouseMove)
+		@interactionLayer.mousemove _.throttle(onMouseMove, 20)
 
 		# listen to the document (rather than holder) for mouse up so that if they drag out
 		# of the canvas before releasing, it still stops drawing
 		$(document).mouseup (event) =>
-			@drawing = false
+			delete @touchesInProgress[@MOUSE_TOUCH_ID]
+			position =
+				x: event.pageX
+				y: event.pageY
+			@setStatus("mouseUp :\n#{JSON.stringify(position)}")
+			@handleMove(@MOUSE_TOUCH_ID, position, false)
 
 		# if exit and renter, update position so don't draw line from exit point
 		@holder.mouseenter (event) =>
 			position =
 				x: event.pageX
 				y: event.pageY
-			@handleMove(position, false)
+			@handleMove(@MOUSE_TOUCH_ID, position, false)
 
 
-		# check if this needs to be interaction layer to prevent same avater-expanding problem
-		@holder.on 'touchstart': (event) =>
-			# since touches can jump without first moving to the new location,
-			# need to update position first or we'll draw from the last touch location
-			touch = event.originalEvent.touches[0]
-			position =
-				x: touch.pageX
-				y: touch.pageY
-			@handleMove(position)
+		# check if this needs to be interaction layer to prevent same avatar-expanding problem
+		@holder.on 'touchstart', (event) =>
+			touches = event.originalEvent.changedTouches
+			@setStatus("touchStart touches:\n#{touches}")
+			for touch in touches
 
-			@drawing = true
+				# since touches can jump without first moving to the new location,
+				# need to update position first or we'll draw from the last touch location
+				position =
+					x: touch.pageX
+					y: touch.pageY
 
-		@holder.on 'touchend': (event) =>
-			@drawing = false
+				@handleMove(touch.identifier, position, false)
 
-		@holder.on 'touchmove': _.throttle((event) =>
+		onTouchMove = (event) =>
 			event.preventDefault()
-			touch = event.originalEvent.touches[0]
-			position =
-				x: touch.pageX
-				y: touch.pageY
-			@handleMove(position)
-		, 25)
+			touches = event.originalEvent.changedTouches
+			@setStatus("touchMove touches:\n#{touches}")
+			for touch in touches
+				# touches by definition are always drawing
+				drawing = true
+
+				position =
+					x: touch.pageX
+					y: touch.pageY
+				@handleMove(touch.identifier, position, drawing)
+
+		throttledOnTouchMove = _.throttle(onTouchMove, 25)
+
+		@holder.on('touchmove', throttledOnTouchMove)
+
+		@holder.on 'touchend', (event) =>
+			touches = event.originalEvent.changedTouches
+			@setStatus("touchEnd touches:\n#{touches}")
+			for touch in touches
+				position =
+					x: touch.pageX
+					y: touch.pageY
+				@handleMove(touch.identifier, position, false)
 
 		# we're ready to draw!
 		@ready = true
 
-		# @socket.on('users', (userInfo) ->
+		# @socket`'users', (userInfo) ->
 		# 	console.log("users: ", userInfo)
 		# 	@users = userInfo.users
 		# 	@clientUser = userInfo.users[userInfo.userID]
@@ -211,6 +235,7 @@ class MultiPaint.Client
 			nick: serverUser.nick
 			color: serverUser.color
 			avatar: @createAvatar(serverUser)
+			secondaryAvatars: {}
 		@users[serverUser.id] = localUser
 		@userCount++
 
@@ -219,7 +244,7 @@ class MultiPaint.Client
 	removeLocalUser: (userID) ->
 		localUser = @users[userID]
 		localUser?.avatar.remove()
-		delete @users[user.id]
+		delete @users[userID]
 		@userCount--
 
 	handleRemoteUserAttrChange: (userID, attrName, newValue) =>
@@ -227,8 +252,15 @@ class MultiPaint.Client
 		unless localUser?
 			console.error("Couldn't find user with userID #{userID} for #{attrName} change.")
 			return
-		localUser[attrName] = newValue
-		@redrawAvatar(localUser)
+
+		currentVal = localUser[attrName]
+		if newValue != currentVal
+			localUser[attrName] = newValue
+			@redrawAvatars(localUser)
+
+			# notify client listeners if it was the current user
+			if localUser.id == @clientUser.id
+				this.emit("#{attrName}Change", newValue)
 
 	setUserNick: (newNick) =>
 		@socket.emit('setUserNick', newNick)
@@ -236,11 +268,14 @@ class MultiPaint.Client
 	handeRemoteUserNickChange: ({userID, nick}) =>
 		@handleRemoteUserAttrChange(userID, 'nick', nick)
 
+	getUserColor: =>
+		return @clientUser.color
+
 	setUserColor: (newColor) =>
 		if @standalone
 			@clientUser.color = newColor
-			@redrawAvatar(@clientUser)
-		else
+			@redrawAvatars(@clientUser)
+		else if @clientUser.color != newColor
 			if @ready
 				@socket.emit('setUserColor', newColor)
 			else
@@ -250,27 +285,23 @@ class MultiPaint.Client
 	handeRemoteUserColorChange: ({userID, color}) =>
 		@handleRemoteUserAttrChange(userID, 'color', color)
 
-	handleMove: (position, drawing=@drawing) =>
+	handleMove: (touchID, position, drawing=false) =>
 		canvasPos = @windowToCanvasPos(position)
-		if @standalone
-			@moveLocalUser(@clientUser, @selectedLayer.id, canvasPos, drawing)
-		else
-			#TODO Add touch id / multi-touch support
-			moveData = {
-				layerID: @selectedLayer.id
-				canvasPos
-				drawing
-			}
-			@socket.json.emit('move', moveData)
+		moveData = {
+			layerID: @selectedLayer.id
+			touchID
+			canvasPos
+			drawing
+		}
+		@socket.json.emit('move', moveData)
 
-	handleRemoteMove: ({userID, layerID, canvasPos, drawing}) =>
+	handleRemoteMove: ({userID, layerID, touchID, canvasPos, drawing}) =>
 		localUser = @users[userID]
 		unless localUser?
 			console.error('Received move from unknown user: ', userID)
 			return
 
-
-		@moveLocalUser(localUser, layerID, canvasPos, drawing)
+		@moveLocalUser(localUser, layerID, touchID, canvasPos, drawing)
 
 	handleUserJoined: ({user, layer}) =>
 		if user.id == @clientUser.id
@@ -280,7 +311,7 @@ class MultiPaint.Client
 		@addLocalLayer(layer)
 		@addLocalUser(user)
 
-	handleUserLeft: (user) =>
+	handleUserLeft: (userID) =>
 		@removeLocalUser(userID)
 		#TODO other cleanup
 
@@ -315,9 +346,14 @@ class MultiPaint.Client
 			y: windowPos.y - canvasOffset.top
 		}
 
-	createAvatar: (user, position) ->
+	createAvatar: (user, position=null, secondaryTouchID=null) ->
+		avatarID = "user-#{user.id}"
+		avatarNick = user.nick
+		if secondaryTouchID?
+			avatarID += "_#{secondaryTouchID}"
+			avatarNick += "_#{secondaryTouchID}"
 
-		avatar = $("<div class='avatar' id='user-#{user.id}'/>")
+		avatar = $("<div class='avatar' id='#{avatarID}'/>")
 
 		if position?
 			avatar.css(position)
@@ -344,25 +380,53 @@ class MultiPaint.Client
 		ctx.fill()
 		ctx.stroke()
 
-		nick = $("<div class='nick'>#{user.nick}</div>").appendTo(avatar)
+		nick = $("<div class='nick'>#{avatarNick}</div>")
 		nick.css('color', "rgba(#{user.color}, 1.0)")
+		nick.appendTo(avatar)
 
 		return $(avatar)
 
-	redrawAvatar: (localUser) ->
+	redrawAvatars: (localUser) ->
 		oldAvatar = localUser.avatar
 		oldPos = oldAvatar.position()
 		@holder.find("#user-#{localUser.id}").remove()
 		newAvater = @createAvatar(localUser, oldPos)
 		localUser.avatar = newAvater
+		#TODO redraw secondary avatars
 
-	moveLocalUser: (localUser, layerID, position, drawing) ->
+	moveLocalUser: (localUser, layerID, touchID, position, drawing) ->
+		if touchID == @MOUSE_TOUCH_ID
+			avatar = localUser.avatar
+		else
+			# dealing with a secondary touch
+			avatar = localUser.secondaryAvatars[touchID]
+			unless drawing
+				# bail out if we're not drawing, killing the avater if necessary
+				if avatar?
+					console.log("removing secondary avatar")
+					avatar.remove()
+					delete localUser.secondaryAvatars[touchID]
+				return
+
+			# must be drawing, so make sure we have an avatar
+			unless avatar?
+				console.log("creating new secondary avatar")
+				cssPos =
+					left: position.x - 8
+					top: position.y - 8
+				avatar = @createAvatar(localUser, cssPos, touchID)
+				localUser.secondaryAvatars[touchID] = avatar
+			else
+				console.log('existing avatar')
+
 		if drawing
-			offset = localUser.avatar.position()
+			offset = avatar.position()
 
 			old =
 				x: offset.left + 8
 				y: offset.top + 8
+
+			console.log("drawing from old position: ", old)
 
 			layer = @layers[layerID]
 			unless layer?
@@ -377,7 +441,12 @@ class MultiPaint.Client
 			layer.ctx.closePath()
 			layer.ctx.stroke()
 
-		localUser.avatar.css(
+		avatar.css(
 			left: "#{position.x - 8}px"
 			top:  "#{position.y - 8}px"
 		)
+
+	setStatus: (message) ->
+		console.log(message)
+		statusArea = $('#statusArea')
+		statusArea.val("#{message}\n#{statusArea.val()}")

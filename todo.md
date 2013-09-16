@@ -13,16 +13,23 @@ ToDo
 - [x] Have server honor remote color selections
 - [ ] Add thickness selector
 - [ ] Allow adding secondary layers
-- [ ] Support multi-touch (iPad)
-- [ ] Support SmartBoard multi-touch
+- [x] Support multi-touch (iPad)
+- [b] Support SmartBoard multi-touch (blocked on WDK touch event bugs)
 - [ ] Support Leap multi-touch
 - [ ] Supprt image upload layer
-- [ ] Support saving
-- [ ] Fix page layout
+- [ ] Support saving as image
+- [ ] Support saving to database (preserving layers)
+- [ ] Support attaching to Rally story as flattened image
+- [ ] Support saving to google drive (like conceptboard.com)
+- [ ] Fix page layout by moving to fixed initial size + expand buttons (+optimize canvas to window position calculation)
+- [ ] Rework to use optimistic drawing (draw immediately, don't wait on roundtrip)
+- [ ]		Allow server to undo invalid edits somehow (maybe just forbid on client, monkeying just means it won't be saved?)
+- [ ] Support a vector layer
+- [ ] Support creating a library of templates (both page-level and component/stamp-level)
 - [ ] Handle clean-up of disconnected users' layers?  Allow reattach?
-- [ ] Support attaching to Rally story
-- [ ] Support phone trackpad with QR registration (like reveal.js)
-	- [ ] maybe show rectangle of visible/editable area in this mode, 2-finger pan?
+- [x] Support joining with QR registration
+- [ ] Add different interactions for different screen sizes
+	- [ ] Maybe show rectangle of visible/editable area in this mode, 2-finger pan?
 	- [ ] 3-finger pan for larger screens that would still want 2 finger multi-touch?
 - [ ] Support windows 8 touch w/ pressure sensitivity
 - [ ] Support Chromecast (https://developers.google.com/cast/)
@@ -39,3 +46,5 @@ ToDo
 - [ ] Better support window resizing
 - [x] Allow a user to be in multiple paint sessions at the same time (vs one per browser session)
 - [ ] Support offline work and then resync with oldest/most recent edit times on server and client
+- [ ] Figure out what to do about lost move events that tell other clients drawing=false before next drawing=true
+- [ ] Figure out what to do about missing touchRecords due to server lag and mouseup/touchend-acks that arrive after starting a new mousedown/touchstart

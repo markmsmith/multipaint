@@ -47,19 +47,19 @@ class PaintSession
 	getLayer: (layerID) ->
 		@layers[layerID]
 
-	move: (layerID, canvasPos) ->
+	move: (layerID, touchID, canvasPos) ->
 		layer = @getLayer(layerID)
 		unless layer
 			console.log("Invalid layer with id #{layerID} requested in paint session #{@id}")
 			return
-		layer.move(canvasPos)
+		layer.move(touchID, canvasPos)
 
-	draw: (layerID, canvasPos, color) ->
+	draw: (layerID, touchID, canvasPos, color) ->
 		layer = @getLayer(layerID)
 		unless layer
 			console.log("Invalid layer with id #{layerID} requested in paint session #{@id}")
 			return
 
-		layer.draw(canvasPos, color)
+		layer.draw(touchID, canvasPos, color)
 
 module.exports = PaintSession

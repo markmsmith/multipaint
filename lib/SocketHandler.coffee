@@ -130,6 +130,7 @@ class SocketHandler
 
 	handleMove: (socket, paintSession, user, {
 		layerID
+		touchID
 		canvasPos
 		drawing
 	}) =>
@@ -137,9 +138,9 @@ class SocketHandler
 		jsonSender = @io.sockets.in(paintSession.id).json
 
 		if drawing
-			paintSession.draw(layerID, canvasPos, user.color)
+			paintSession.draw(layerID, touchID, canvasPos, user.color)
 		else
-			paintSession.move(layerID, canvasPos)
+			paintSession.move(layerID, touchID, canvasPos)
 			# it's ok if some non-drawing moves are lost
 			jsonSender = jsonSender.volatile
 
@@ -147,6 +148,7 @@ class SocketHandler
 		remoteMoveData = {
 			userID: user.id
 			layerID
+			touchID
 			canvasPos
 			drawing
 		}
